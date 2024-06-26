@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { Red_Hat_Display } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./styles/globals.css";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
-const redhatDisplay = Red_Hat_Display({ subsets: ["latin"] });
+const roboto = Roboto({ subsets: ["latin"], weight: "300"});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -16,7 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={redhatDisplay.className}>{children}</body>
+      <body className={roboto.className}>
+        <Header />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }
