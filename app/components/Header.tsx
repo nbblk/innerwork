@@ -1,27 +1,77 @@
+"use client";
 import { Sacramento } from "next/font/google";
 import Link from "next/link";
+import { supabase } from "../lib/supabase";
+import { useCallback, useEffect, useState } from "react";
+import { User } from "@supabase/supabase-js";
+import Login from "./Login";
 
 const sacramento = Sacramento({ weight: "400", subsets: ["latin"] });
 
-const menus = [
-    { name: "home", url: "/" },
-    { name: "write", url: "/write" },
-    { name: "login", url: "/login" },
+const loggedInMenus = [
+  { name: "home", url: "/" },
+  { name: "write", url: "/write" },
 ];
 
 export default function Header() {
-    return (
-        <header className="fixed top-0 z-20 w-full flex justify-between items-center p-4">
-            <h1 className={`${sacramento.className} text-8xl`}>innerwork</h1>
-            <nav className="flex justify-start items-start text-2xl">
-                <ul className="flex gap-4">
-                    {menus.map((menu) => (
-                        <li key={menu.name} className="border border-black border-2 rounded-full py-2 px-4 hover:bg-black hover:text-white transition hover:transition-colors">
-                            <Link href={menu.url}>{menu.name}</Link>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
-        </header>
-    )
-};
+  const [user, setUser] = useState<User | null>(null);
+
+  const getSession = useCallback(async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error("Error getting session:", error.message);
+      return;
+    }
+    if (user) {
+      setUser(data.session?.user ?? null);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    getSession();
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [getSession]);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  return (
+    <header className="fixed top-0 z-20 w-full flex justify-between items-center p-4">
+      <h1 className={`${sacramento.className} text-8xl`}>innerwork</h1>
+      <nav className="flex justify-start items-start text-2xl">
+        <ul className="flex gap-4">
+          {user ? (
+            <>
+              {loggedInMenus.map((menu) => (
+                <li
+                  key={menu.name}
+                  className="border border-black border-2 rounded-full py-2 px-4 hover:bg-black hover:text-white transition hover:transition-colors"
+                >
+                  <Link href={menu.url}>{menu.name}</Link>
+                </li>
+              ))}
+              <button
+                className="border border-black border-2 rounded-full py-2 px-4 hover:bg-black hover:text-white transition hover:transition-colors"
+                onClick={signOut}
+              >
+                sign out
+              </button>
+            </>
+          ) : (
+            <Login />
+          )}
+        </ul>
+      </nav>
+    </header>
+  );
+}
