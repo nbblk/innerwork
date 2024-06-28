@@ -2,33 +2,32 @@
 import { Sacramento } from "next/font/google";
 import Link from "next/link";
 import { supabase } from "../lib/supabase";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import Login from "./Login";
 
 const sacramento = Sacramento({ weight: "400", subsets: ["latin"] });
 
 const loggedInMenus = [
-  { name: "home", url: "/" },
+  { name: "posts", url: "/posts" },
   { name: "write", url: "/write" },
 ];
 
 export default function Header() {
   const [user, setUser] = useState<User | null>(null);
 
-  const getSession = useCallback(async () => {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) {
-      console.error("Error getting session:", error.message);
-      return;
-    }
-    if (user) {
-      setUser(data.session?.user ?? null);
-    }
-  }, [user]);
-
   useEffect(() => {
+    const getSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error getting session:", error.message);
+        return;
+      }
+      setUser(data.session?.user ?? null);
+    };
+
     getSession();
+
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
@@ -38,7 +37,7 @@ export default function Header() {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [getSession]);
+  }, []);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -64,7 +63,7 @@ export default function Header() {
                 className="border border-black border-2 rounded-full py-2 px-4 hover:bg-black hover:text-white transition hover:transition-colors"
                 onClick={signOut}
               >
-                sign out
+                signout
               </button>
             </>
           ) : (
