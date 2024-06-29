@@ -17,7 +17,10 @@ export const createPost = async ({
 
 export const getPosts = async (): Promise<Post[]> => {
   try {
-    const { data, error } = await supabase.from("posts").select("*");
+    const { data, error } = await supabase
+      .from("posts")
+      .select("id, title, content, image_url")
+      .order("id", { ascending: false });
 
     if (error) {
       throw error as Error; // Add type assertion here
